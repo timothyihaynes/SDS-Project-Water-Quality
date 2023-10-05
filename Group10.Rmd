@@ -58,6 +58,8 @@ Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggpl
 
 **This data originally came from a larger data set describing the same variables. This originally data set is called "Water Quality Sampling Data" located on the data.austintexas.gov website.**
 
+
+
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r cars}
