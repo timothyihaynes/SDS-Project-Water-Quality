@@ -9,27 +9,54 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Description
+```{r message=FALSE}
 
-Analyzing the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin. 
+library(tidyverse)
 
 # select data Water_Quality <- read.csv("Water_Quality.csv")
-# fic data from above to reflect the subset data we pulled
+
+Water_Quality <- read.csv("~/Project 10/Water_Quality.csv", header=FALSE)
+
+Water_Quality_new <- Water_Quality %>% separate(V4, into = c("Date", "Time", "Meridium"), sep = " ")
+
+Water_Quality_new <- Water_Quality_new %>% separate(Date, into = c("Month", "Day", "Year"), sep = "/") 
+
+```
+
+## Description
+
+**Analyzing the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin.**
 
 ## Goals
 
+**Our goals for this project is to observe how different organic nutrients and different locations can affect E.coli presence. Additionally, we also want to be able to analyze a data set and create/conclude data visualizations and answer our hypothesis.**
+
 ## Link to Data
-```{r cars}
-Water_Quality_new <- Water_Quality %>% separate(SAMPLE_DATE, into = c("Date", "Time", "Meridium"), sep = " ") Water_Quality_new <- Water_Quality_1 %>% separate(Date, into = c("Month", "Day", "Year"), sep = "/") #Visualization 1 Water_Quality_new %>% group_by(PARAMETER)%>% filter(PARAMETER == "E COLI BACTERIA") %>% ggplot(aes(x=WATERSHED)) + geom_bar(alpha=1, size=2)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7))
-```
+
+**https://drive.google.com/file/d/13872S6iGB2MThwLKrlwKPZ2B5RK_kt5j/view?usp=sharing**
 
 ## Information on the Data
 
 ## Data Visualizations
 
+```{r}
+library(ggplot2)
+
+#Visualization 1
+
+Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggplot(aes(x=V6)) + geom_bar(alpha=1, size=2)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+# Visualization 2
+```
+
 ## Hypothesis
 
+**1:**
+**2:**
+
 ## References
+
+**This data originally came from a larger data set describing the same variables. This originally data set is called "Water Quality Sampling Data" located on the data.austintexas.gov website.**
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
