@@ -44,15 +44,16 @@ library(ggplot2)
 
 #Visualization 1
 
-Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggplot(aes(x=V6)) + geom_bar(alpha=1, size=2)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7))
+Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggplot(aes(x=V6)) + geom_bar(alpha=1, size=2)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Watershed', y = 'E. Coli Presence')
 
-# Visualization 2
+#Visualization 2
+Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggplot(aes(x=V11)) + geom_bar(alpha=1, size=2)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Site Type', y = 'E. Coli Presence')
 ```
 
 ## Hypothesis
 
-**1:**
-**2:**
+**1: Increasing human presence in public bodies of water will increase E. coli presence in popular attraction sites.**
+**2: If there is more running water in a particular body of water, then the presence of E. coli will increase.**
 
 ## References
 
