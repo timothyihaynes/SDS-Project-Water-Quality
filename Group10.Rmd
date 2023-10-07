@@ -37,6 +37,8 @@ Water_Quality_new <- Water_Quality_new %>% separate(Date, into = c("Month", "Day
 
 ## Information on the Data
 
+**This is a subset of the larger dataset of Water Quality in different waters in Austin and the different nutrients found in them.**
+
 ## Data Visualizations
 
 ```{r}
@@ -52,27 +54,10 @@ Water_Quality_new %>% group_by(V17)%>% filter(V17 == "E COLI BACTERIA") %>% ggpl
 
 ## Hypothesis
 
-**1: Increasing human presence in public bodies of water will increase E. coli presence in popular attraction sites.**
+**1: Increasing human presence in public bodies of water will increase E. coli presence in popular attraction sites.  **
+
 **2: If there is more running water in a particular body of water, then the presence of E. coli will increase.**
 
 ## References
 
 **This data originally came from a larger data set describing the same variables. This originally data set is called "Water Quality Sampling Data" located on the data.austintexas.gov website.**
-
-
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
