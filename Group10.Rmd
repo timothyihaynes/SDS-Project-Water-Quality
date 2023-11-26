@@ -80,7 +80,7 @@ ggplot(ecoli_data, aes(x = Year, y = RESULT)) +
   geom_point(aes(color = "Observed"), alpha = 0.7) +
   geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
   labs(title = "E. coli Amounts Over the Years (Colonies method)",
-       x = "Year", y = "E. coli Concentration (Colonies/100mL") +
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
   scale_color_manual(values = c("Observed" = "red")) +
   theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
@@ -103,7 +103,7 @@ ggplot(ecoli_data_no_outliers, aes(x = Year, y = RESULT)) +
   geom_point(aes(color = "Observed"), alpha = 0.7) +
   geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
   labs(title = "E. coli Amounts Over the Years (Colonies method) (No outliners)",
-       x = "Year", y = "E. coli Concentration (Colonies/100mL") +
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
   scale_color_manual(values = c("Observed" = "green")) +
   theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
