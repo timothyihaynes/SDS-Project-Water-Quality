@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+install.packages("MASS")
 ```
 
 ```{r message=FALSE}
@@ -50,6 +51,103 @@ colnames(Water_Quality_new)[colnames(Water_Quality_new) == "LON_DD_WGS84"] <- "L
 ## Information on the Data
 
 **This is a subset of the larger dataset of Water Quality in different waters in Austin and the different nutrients found in them.**
+
+```{r}
+### Descriptive Stats 
+library(MASS)
+
+# Make RESULTS column numeric 
+Water_Quality_new$RESULT <- as.numeric(Water_Quality_new$RESULT) 
+
+# Percentage of completed graphs (How many rows are not NA's)
+Water_Quality_new %>% summarize_all (function(x)mean (!is.na(x)))
+
+# How many rows are missing for the RESULT column 
+sum(is.na(Water_Quality_new$RESULT))
+
+# Visualize the Ecoli concentrations
+boxplot(Water_Quality_new$RESULT[Water_Quality_new$PARAMETER == "E COLI BACTERIA"], main="E. coli Concentration Boxplot")
+
+### Visualize Ecoli concentration over the years
+# Filter for rows where the parameter is Ecoli measured as colonies/100mL
+ecoli_data <- Water_Quality_new[Water_Quality_new$UNIT == "Colonies/100mL", ]
+
+# Fit a Huber regression model
+huber_model <- rlm(RESULT ~ Year, data = Water_Quality_new)
+
+# Create a scatter plot with the regression line
+ggplot(ecoli_data, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
+  labs(title = "E. coli Amounts Over the Years (Colonies method)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL") +
+  scale_color_manual(values = c("Observed" = "red")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+# Remove outliers 
+# Create data vector with no NA's
+ecoli_data_no_na <- subset(Water_Quality_new, UNIT == "Colonies/100mL" & !is.na(RESULT))
+
+# Identify outliers using IQR method 
+Q1 <- quantile(ecoli_data_no_na$RESULT, 0.25)
+Q3 <- quantile(ecoli_data_no_na$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+#Remove outliers
+ecoli_data_no_outliers <- ecoli_data_no_na[ecoli_data_no_na$RESULT >= lower_bound & ecoli_data_no_na$RESULT <= upper_bound, ]
+
+# Create a new plot without outliers (Colonies)
+ggplot(ecoli_data_no_outliers, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
+  labs(title = "E. coli Amounts Over the Years (Colonies method) (No outliners)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL") +
+  scale_color_manual(values = c("Observed" = "green")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+
+### 
+# Filter for rows where the parameter is Ecoli measured as MPN/100mL
+ecoli_data_mpn <- Water_Quality_new[Water_Quality_new$UNIT == "MPN/100ML", ]
+
+# Fit a Huber regression model
+huber_model <- rlm(RESULT ~ Year, data = Water_Quality_new)
+
+
+# Create a scatter plot with the regression line
+ggplot(ecoli_data_mpn, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
+  labs(title = "E. coli Amounts Over the Years (MPN method)",
+       x = "Year", y = "E. coli Concentration (MPN/100mL") +
+  scale_color_manual(values = c("Observed" = "red")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+
+# Remove outliers 
+# Create data vector with no NA's
+ecoli_data_no_na_mpn <- subset(Water_Quality_new, UNIT == "MPN/100ML" & !is.na(RESULT))
+
+# Identify outliers using IQR method 
+Q1 <- quantile(ecoli_data_no_na_mpn$RESULT, 0.25)
+Q3 <- quantile(ecoli_data_no_na_mpn$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Remove outliers 
+ecoli_data_no_outliers_mpn <- ecoli_data_no_na_mpn[ecoli_data_no_na_mpn$RESULT >= lower_bound & ecoli_data_no_na_mpn$RESULT <= upper_bound, ]
+
+# Create a new plot without outliers (MPN)
+ggplot(ecoli_data_no_outliers_mpn, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  geom_smooth(method = "rlm", formula = y ~ x, se = FALSE, color = "blue") +
+  labs(title = "E. coli Amounts Over the Years (MPN method) (No outliners)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
+  scale_color_manual(values = c("Observed" = "green")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
 
 ## Data Visualizations
 
@@ -154,6 +252,77 @@ ggmap(map) +
   y = "Latitude") +
   theme_minimal()
 ```
+```{r}
+### New visualization of Ecoli presence using Colonies without outliers
+
+# Call the ggmap package
+library(ggmap)
+library(dplyr)
+
+# Make variables numeric
+ecoli_data_no_outliers$Longitude <- as.numeric(ecoli_data_no_outliers$Longitude)
+ecoli_data_no_outliers$Latitude <- as.numeric(ecoli_data_no_outliers$Latitude)
+ecoli_data_no_outliers$RESULT <- as.numeric(ecoli_data_no_outliers$RESULT)
+
+# Remove NA's in columns for latitude, longitude and concentration
+ecoli_data_no_outliers <- na.omit(ecoli_data_no_outliers[, c("Longitude", "Latitude", "RESULT")])
+
+# Label the parameters of the map 
+map_data <- ecoli_data_no_outliers %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = ecoli_data_no_outliers, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using Colonies/100mL", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map Colonies/100ml",
+       x = "Longitude",  # Replace with your actual x variable label
+       y = "Latitude") +
+  theme_minimal()
+
+```
+
+```{r}
+### New visualization of Ecoli presence using MPN without outliers
+
+# Call the ggmap package
+library(ggmap)
+library(dplyr)
+
+# Make variables numeric
+ecoli_data_no_outliers_mpn$Longitude <- as.numeric(ecoli_data_no_outliers_mpn$Longitude)
+ecoli_data_no_outliers_mpn$Latitude <- as.numeric(ecoli_data_no_outliers_mpn$Latitude)
+ecoli_data_no_outliers_mpn$RESULT <- as.numeric(ecoli_data_no_outliers_mpn$RESULT)
+
+# Remove NA's in columns for latitude, longitude and concentration
+ecoli_data_no_outliers_mpn <- na.omit(ecoli_data_no_outliers_mpn[, c("Longitude", "Latitude", "RESULT")])
+
+# Label the parameters of the map 
+map_data <- ecoli_data_no_outliers_mpn %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = ecoli_data_no_outliers_mpn, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using MPN/100mL", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map MPN/100ml",
+       x = "Longitude",  # Replace with your actual x variable label
+       y = "Latitude") +
+  theme_minimal()
+```
+
 
 ## Hypothesis
 
