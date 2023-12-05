@@ -53,7 +53,7 @@ colnames(Water_Quality_new)[colnames(Water_Quality_new) == "LON_DD_WGS84"] <- "L
 **This is a subset of the larger dataset of Water Quality in different waters in Austin and the different nutrients found in them.**
 
 ```{r}
-### Descriptive Stats 
+### Descriptive Stats - Missingness: Addressing NA's
 library(MASS)
 
 # Make RESULTS column numeric 
@@ -65,6 +65,41 @@ Water_Quality_new %>% summarize_all (function(x)mean (!is.na(x)))
 # How many rows are missing for the RESULT column 
 sum(is.na(Water_Quality_new$RESULT))
 
+# Create a missingness indicator variable for RESULTS
+Water_Quality_indicator <- Water_Quality_new %>%
+  mutate(missing_variable_indicator = ifelse(is.na(RESULT), 1, 0))
+
+# Filter out the rows that are not missings
+Water_Quality_missing_rows <- Water_Quality_indicator %>%
+  filter(missing_variable_indicator == 1)
+
+
+# Visualize the amount of Project names that have any missingness in the RESULTS column
+ggplot(Water_Quality_missing_rows, aes(x = PROJECT)) +
+  geom_bar(stat = "count") +
+  labs(title = "Missingness of RESULT vs. PROJECT",
+       x = "Project name",
+       y = "Latitide Missingness Count") +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Create a missingness indicator variable for Longitude
+Water_Quality_indicator <- Water_Quality_new %>%
+  mutate(missing_variable_indicator = ifelse(is.na(Longitude), 1, 0))
+
+#Filter out the rows that are not missing
+Water_Quality_missing_rows <- Water_Quality_indicator %>%
+  filter(missing_variable_indicator == 1)
+
+
+# Visualize the amount of Project names that have any missingness in the Longitude column
+ggplot(Water_Quality_missing_rows, aes(x = PROJECT)) +
+  geom_bar(stat = "count") +
+  labs(title = "Missingness of Longitude vs. PROJECT",
+       x = "Project Name",
+       y = "Result Missingness Count") +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+### Decriptive Stats - E. Coli Concentrations
 # Visualize the Ecoli concentrations
 boxplot(Water_Quality_new$RESULT[Water_Quality_new$PARAMETER == "E COLI BACTERIA"], main="E. coli Concentration Boxplot")
 
