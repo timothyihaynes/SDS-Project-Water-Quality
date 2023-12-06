@@ -1,0 +1,425 @@
+---
+title: "Project - Group 10"
+author: "Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria Valle, Katie Yang"
+date: "SDS 322E"
+output: html_document
+---
+
+```{r message=FALSE}
+
+#Load necessary libraries 
+library(tidyverse)
+library(MASS)
+library(ggplot2)
+library(ggmap)
+library(dplyr)
+
+```
+
+## Goals and links to data 
+```{r}
+
+## Analyzing the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin.**
+  
+  ## Goals
+  
+### Our goals for this project is to observe how different organic nutrients and different locations can affect E.coli presence. Additionally, we also want to be able to analyze a data set and create/conclude data visualizations and answer our hypothesis.**
+  
+  ## Link to Data
+  
+### https://drive.google.com/file/d/13872S6iGB2MThwLKrlwKPZ2B5RK_kt5j/view?usp=sharing**
+  
+  ## Information on the Data
+  
+### This is a subset of the larger dataset of Water Quality in different waters in Austin and the different nutrients found in them.**
+```
+
+## Data Cleaning
+```{r}
+# Select data Water_Quality 
+Water_Quality <- read.csv("~/Water_Quality.csv", header=FALSE)
+
+# Change the names of the variables to their retrospective column names 
+col_names <- Water_Quality[1, ]
+colnames(Water_Quality) <- col_names
+
+# Remove the first row
+Water_Quality_new <- Water_Quality[-1, ]
+
+# Separate the month, day, year, time and meridium
+Water_Quality_new <- Water_Quality_new %>% separate(SAMPLE_DATE, into = c("Date", "Time", "Meridium"), sep = " ")
+Water_Quality_new <- Water_Quality_new %>% separate(Date, into = c("Month", "Day", "Year"), sep = "/") 
+
+# Change the NA and long column names into specific column names 
+colnames(Water_Quality_new)[colnames(Water_Quality_new) == "NA"] <- "ID"
+colnames(Water_Quality_new)[colnames(Water_Quality_new) == "LAT_DD_WGS84"] <- "Latitude"
+colnames(Water_Quality_new)[colnames(Water_Quality_new) == "LON_DD_WGS84"] <- "Longitude"
+
+```
+
+
+## Descriptive Stats - Missingness: Addressing NA's
+```{r}
+
+# Find percentage of completed graphs (How many rows are not NA's)
+Water_Quality_new %>% summarize_all (function(x)mean (!is.na(x)))
+```
+
+### RESULTS Column
+```{r}
+# Make RESULTS column numeric 
+Water_Quality_new$RESULT <- as.numeric(Water_Quality_new$RESULT) 
+
+# How many rows are missing for the RESULT column?
+sum(is.na(Water_Quality_new$RESULT))
+
+# Create a missingness indicator variable for RESULTS
+Water_Quality_indicator <- Water_Quality_new %>%
+  mutate(missing_variable_indicator = ifelse(is.na(RESULT), 1, 0))
+
+# Filter out the rows that are not missings
+Water_Quality_missing_rows <- Water_Quality_indicator %>%
+  filter(missing_variable_indicator == 1)
+
+# Visualize the amount of project names that have any missingness in the RESULTS column
+ggplot(Water_Quality_missing_rows, aes(x = PROJECT)) +
+  geom_bar(stat = "count") +
+  labs(title = "Missingness of RESULT vs. PROJECT",
+       x = "Project name",
+       y = "Latitide Missingness Count") +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Longitude Column
+```{r}
+# How many rows are missing for the Longitude column? 
+sum(is.na(Water_Quality_new$Longitude))
+
+# Create a missingness indicator variable for Longitude
+Water_Quality_indicator <- Water_Quality_new %>%
+  mutate(missing_variable_indicator = ifelse(is.na(Longitude), 1, 0))
+
+#Filter out the rows that are not missing
+Water_Quality_missing_rows <- Water_Quality_indicator %>%
+  filter(missing_variable_indicator == 1)
+
+# Visualize the amount of Project names that have any missingness in the Longitude column
+ggplot(Water_Quality_missing_rows, aes(x = PROJECT)) +
+  geom_bar(stat = "count") +
+  labs(title = "Missingness of Longitude vs. PROJECT",
+       x = "Project Name",
+       y = "Result Missingness Count") +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### E. Coli Data
+```{r}
+# Visualize the Ecoli concentrations
+boxplot(Water_Quality_new$RESULT[Water_Quality_new$PARAMETER == "E COLI BACTERIA"], main="E. coli Concentration Boxplot")
+```
+
+### Visualize Ecoli concentration over the years for Colonies/100mL method of collecting E.Coli
+```{r}
+# Filter for rows where the parameter Ecoli is measured as colonies/100mL
+ecoli_data <- Water_Quality_new[Water_Quality_new$UNIT == "Colonies/100mL", ]
+
+# Visualize E.Coli concentrations over the years for Colonies/100mL method of collecting E.Coli
+ggplot(ecoli_data, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  labs(title = "E. coli Amounts Over the Years (Colonies method) (No outliners)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
+  scale_color_manual(values = c("Observed" = "red")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+### Removing outliers and missingness and visualizing E. Coli data for Colonies/100mL method of collecting E.Coli
+```{r}
+
+# Create data vector with no NA's in the RESULTS column
+ecoli_data_no_na <- subset(Water_Quality_new, UNIT == "Colonies/100mL" & !is.na(RESULT))
+
+# Identify outliers using IQR method 
+Q1 <- quantile(ecoli_data_no_na$RESULT, 0.25)
+Q3 <- quantile(ecoli_data_no_na$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+#Remove outliers
+ecoli_data_no_outliers <- ecoli_data_no_na[ecoli_data_no_na$RESULT >= lower_bound & ecoli_data_no_na$RESULT <= upper_bound, ]
+
+# Create a new plot without outliers (Colonies)
+ggplot(ecoli_data_no_outliers, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  labs(title = "E. coli Amounts Over the Years (Colonies method) (No outliners)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
+  scale_color_manual(values = c("Observed" = "green")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+### Visualize Ecoli concentration over the years for Colonies/100mL method of collecting E.Coli
+```{r}
+# Filter for rows where the parameter is Ecoli measured as MPN/100mL
+ecoli_data_mpn <- Water_Quality_new[Water_Quality_new$UNIT == "MPN/100ML", ]
+
+# Create a scatter plot with the regression line
+ggplot(ecoli_data_mpn, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  labs(title = "E. coli Amounts Over the Years (MPN method)",
+       x = "Year", y = "E. coli Concentration (MPN/100mL") +
+  scale_color_manual(values = c("Observed" = "red")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+### Removing outliers and missingness and visualizing E. Coli data for MPN/100mL method of collecting E.Coli
+```{r}
+# Create data vector with no NA's
+ecoli_data_no_na_mpn <- subset(Water_Quality_new, UNIT == "MPN/100ML" & !is.na(RESULT))
+
+# Identify outliers using IQR method 
+Q1 <- quantile(ecoli_data_no_na_mpn$RESULT, 0.25)
+Q3 <- quantile(ecoli_data_no_na_mpn$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Remove outliers 
+ecoli_data_no_outliers_mpn <- ecoli_data_no_na_mpn[ecoli_data_no_na_mpn$RESULT >= lower_bound & ecoli_data_no_na_mpn$RESULT <= upper_bound, ]
+
+# Create a new plot without outliers (MPN)
+ggplot(ecoli_data_no_outliers_mpn, aes(x = Year, y = RESULT)) +
+  geom_point(aes(color = "Observed"), alpha = 0.7) +
+  labs(title = "E. coli Amounts Over the Years (MPN method) (No outliners)",
+       x = "Year", y = "E. coli Concentration (Colonies/100mL)") +
+  scale_color_manual(values = c("Observed" = "green")) +
+  theme_minimal()+ theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+## Data Visualizations
+### Initial data exploration 
+```{r}
+
+# Visualization 1 - Bar graph displaying Ecoli Presence by type of Watershed 
+Water_Quality_new %>% group_by(PARAMETER)%>% filter(PARAMETER == "E COLI BACTERIA") %>% ggplot(aes(x=WATERSHED)) + geom_bar(alpha=1)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Watershed', y = 'E. Coli Presence')
+
+#Visualization 2 - Bar graph displaying Ecoli Presence by type of Site type 
+Water_Quality_new %>% group_by(PARAMETER)%>% filter(PARAMETER == "E COLI BACTERIA") %>% ggplot(aes(x=SITE_TYPE)) + geom_bar(alpha=1)+ theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Site Type', y = 'E. Coli Presence')
+
+```
+
+### Geospatial Analysis of E. coli Contamination in Water Sources
+#### Map of E. Coli using Colonies/100mL without removing outliers
+```{r}
+# Apply a google key 
+register_google(key = "AIzaSyDr6jqdF-_3E85ni2nNRcZJ46ieUYokTpk")
+
+# Filter for only the rows containing Ecoli concentrations based on Colonies/100ml
+Water_Quality_ecoli <- Water_Quality_new %>%
+  filter(PARAMETER == "E COLI BACTERIA", UNIT == "Colonies/100mL")
+
+# Remove NA's in columns for latitude, longitude and concentration
+Water_Quality_ecoli <- na.omit(Water_Quality_ecoli[, c("Longitude", "Latitude", "RESULT")])
+
+# Make variables numeric
+Water_Quality_ecoli$Longitude <- as.numeric(Water_Quality_ecoli$Longitude)
+Water_Quality_ecoli$Latitude <- as.numeric(Water_Quality_ecoli$Latitude)
+Water_Quality_ecoli$RESULT <- as.numeric(Water_Quality_ecoli$RESULT) 
+
+# Label the parameters of the map 
+map_data <- Water_Quality_ecoli %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = Water_Quality_ecoli, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using Colonies/100mL", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map Colonies/100ml",
+       x = "Longitude",  # Replace with your actual x variable label
+       y = "Latitude") +
+  theme_minimal()
+
+```
+
+#### Map of E. Coli using MPN/100mL without removing outliers
+```{r}
+
+# Apply a google key 
+register_google(key = "AIzaSyDr6jqdF-_3E85ni2nNRcZJ46ieUYokTpk")
+
+# Filter for only the rows containing Ecoli concentrations based on MPN/100ML
+Water_Quality_ecoli_mpn <- Water_Quality_new %>%
+  filter(PARAMETER == "E COLI BACTERIA", UNIT == "MPN/100ML")
+
+# Remove NA's in columns for latitude, longitude and concentration
+Water_Quality_ecoli_mpn <- na.omit(Water_Quality_ecoli_mpn[, c("Longitude", "Latitude", "RESULT")])
+
+# Make variables numeric
+Water_Quality_ecoli_mpn$Longitude <- as.numeric(Water_Quality_ecoli_mpn$Longitude)
+Water_Quality_ecoli_mpn$Latitude <- as.numeric(Water_Quality_ecoli_mpn$Latitude)
+Water_Quality_ecoli_mpn$RESULT <- as.numeric(Water_Quality_ecoli_mpn$RESULT) 
+
+# Label the parameters of the map 
+map_data <- Water_Quality_ecoli_mpn %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = Water_Quality_ecoli_mpn, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using MPN/100ML", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map MPN/100ML",
+       x = "Longitude", 
+       y = "Latitude") +
+  theme_minimal()
+```
+
+#### Map of E. Coli using Colonies/100mL removing outliers
+```{r}
+
+# Make variables numeric
+ecoli_data_no_outliers$Longitude <- as.numeric(ecoli_data_no_outliers$Longitude)
+ecoli_data_no_outliers$Latitude <- as.numeric(ecoli_data_no_outliers$Latitude)
+ecoli_data_no_outliers$RESULT <- as.numeric(ecoli_data_no_outliers$RESULT)
+
+# Remove NA's in columns for latitude, longitude and concentration
+ecoli_data_no_outliers <- na.omit(ecoli_data_no_outliers[, c("Longitude", "Latitude", "RESULT")])
+
+# Label the parameters of the map 
+map_data <- ecoli_data_no_outliers %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = ecoli_data_no_outliers, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using Colonies/100mL", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map Colonies/100ml",
+       x = "Longitude",  # Replace with your actual x variable label
+       y = "Latitude") +
+  theme_minimal()
+
+```
+
+```{r}
+### New visualization of Ecoli presence using MPN without outliers
+
+# Call the ggmap package
+library(ggmap)
+library(dplyr)
+
+# Make variables numeric
+ecoli_data_no_outliers_mpn$Longitude <- as.numeric(ecoli_data_no_outliers_mpn$Longitude)
+ecoli_data_no_outliers_mpn$Latitude <- as.numeric(ecoli_data_no_outliers_mpn$Latitude)
+ecoli_data_no_outliers_mpn$RESULT <- as.numeric(ecoli_data_no_outliers_mpn$RESULT)
+
+# Remove NA's in columns for latitude, longitude and concentration
+ecoli_data_no_outliers_mpn <- na.omit(ecoli_data_no_outliers_mpn[, c("Longitude", "Latitude", "RESULT")])
+
+# Label the parameters of the map 
+map_data <- ecoli_data_no_outliers_mpn %>%
+  summarise(lat_min = min(Latitude),
+            lat_max = max(Latitude),
+            lon_min = min(Longitude),
+            lon_max = max(Longitude))
+
+# Use the parameters to obtain a map using get_googlemap
+map <- get_googlemap(center = c(lon = mean(c(map_data$lon_min, map_data$lon_max)), lat = mean(c(map_data$lat_min, map_data$lat_max))), zoom = 10)
+
+# Using ggmap create a map based on Ecoli concentration using color gradient 
+ggmap(map) +
+  geom_point(data = ecoli_data_no_outliers_mpn, aes(x = Longitude, y = Latitude, color = RESULT), size = 1) +
+  scale_color_gradient(name = "Ecoli Concentration using MPN/100mL", low = "green", high = "red") +
+  labs(title = "Ecoli Concentration Map MPN/100ml",
+       x = "Longitude",  # Replace with your actual x variable label
+       y = "Latitude") +
+  theme_minimal()
+```
+
+
+## Exploratory Analysis 
+### Hypothesis  One
+
+### Hypothesis Two - The relationship between locations of Nutrients and E. Coli 
+
+#### Filter and adjust data
+```{r}
+# Filter the data to only contain the parameters that are Nutrients or E. Coli
+filtered_data <- Water_Quality_new %>% filter(PARAMETER == "E COLI BACTERIA" | PARAM_TYPE == "Nutrients")
+
+# Remove missingness from RESULTS column
+filtered_data_no_na <- subset(filtered_data, !is.na(RESULT))
+
+# Set the quartiles of the data 
+Q1 <- quantile(filtered_data_no_na$RESULT, 0.25)
+Q3 <- quantile(filtered_data_no_na$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Remove outliers using the IQR method
+filtered_data_no_outliers <- filtered_data_no_na[filtered_data_no_na$RESULT >= lower_bound & filtered_data_no_na$RESULT <= upper_bound, ]
+
+# Create a vector where the no outlier data is filtered by the desired parameters we want to explore further, group the data by paramter and watershed summarizing for the avg concentrations of each, pivoting wider so tha each parameter becomes a column
+result_filtered_data <- filtered_data_no_outliers %>%
+  filter(PARAMETER %in% c("E COLI BACTERIA", "ORTHOPHOSPHORUS AS P", "PHOSPHORUS AS P", "LABILE PHOSPHORUS", "PHOSPHATE AS PO4","ORGANIC PHOSPHORUS", "REDUCTANT-SOLUBLE PHOSPHORUS","PHOSPHORUS AS PO4")) %>%
+  group_by(PARAMETER, WATERSHED) %>%
+  summarise(AvgConcentration = mean(RESULT, na.rm = TRUE)) %>%
+  pivot_wider(names_from = PARAMETER, values_from = AvgConcentration)
+
+# Print the result
+print(result_filtered_data)
+```
+#### Regression Analysis 
+```{r}
+# Create a visualization for the concentrations of E. Coli to the concentrations of 'Orthophosphorus as P'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`ORTHOPHOSPHORUS AS P`,main='E. Coli Concentration vs. Orthophosphorus Concentration',xlab='E. Coli Concentration', ylab = 'Orthophosphorus Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model <- lm(`ORTHOPHOSPHORUS AS P` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model, col = "red")
+
+# Print the plot
+print(plot)
+
+ # Create a visualization for the concentrations of E. Coli to the concentrations of 'Phosphorus as P'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`PHOSPHORUS AS P`,main='E. Coli Concentration vs. Phosphorus Concentration',xlab='E. Coli Concentration', ylab = 'Phosphorus Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model <- lm(`PHOSPHORUS AS P` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model, col = "red")
+
+# Print the plot
+print(plot)
+```
+
+
+### Hypothesis Three
+
+### Hypothesis Four
+
+
+**1: Increasing human presence in public bodies of water will increase E. coli presence in popular attraction sites.  **
+  
+  **2: If there is more running water in a particular body of water, then the presence of E. coli will increase.**
+  
+
+
+
+## References
+  
+  **This data originally came from a larger data set describing the same variables. This originally data set is called "Water Quality Sampling Data" located on the data.austintexas.gov website.**
