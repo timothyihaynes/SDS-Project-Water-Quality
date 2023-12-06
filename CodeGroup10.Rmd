@@ -352,34 +352,65 @@ ggmap(map) +
 
 
 ## Exploratory Analysis 
-### Hypothesis  One - Presence of flowing water and the frequency of E. Coli in a given body of water
+### Hypothesis  One - The relationship between pH and E. coli
 
+#### Filter and adjust data
 ```{r}
-# Assign a new variable called flowing where we classify the site type as either flowing or still water
-Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
-                                 SITE_TYPE == "Spring" ~ "Flowing",
-                                 SITE_TYPE == "Urban runoff" ~ "Flowing",
-                                 SITE_TYPE == "Rural runoff" ~ "Flowing",
-                                 SITE_TYPE == "Cave Stream" ~ "Flowing",
-                                 SITE_TYPE == "Storm Drain" ~ "Flowing",
-                                 TRUE ~ "Still"
-                                 ))
+# Filter the data to only contain the parameters that are pH or E. Coli
+filtered_data_water <- Water_Quality_new %>% filter(PARAMETER == "E COLI BACTERIA" | PARAMETER == "PH")
 
+# Remove missingness from RESULTS column
+filtered_data_water_no_na <- subset(filtered_data_water, !is.na(RESULT))
+
+# Set the quartiles of the data 
+Q1 <- quantile(filtered_data_water_no_na$RESULT, 0.25)
+Q3 <- quantile(filtered_data_water_no_na$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Remove outliers using the IQR method
+filtered_data_water_no_outliers <- filtered_data_water_no_na[filtered_data_water_no_na$RESULT >= lower_bound & filtered_data_water_no_na$RESULT <= upper_bound, ]
+
+# Create a vector where the no outlier data is filtered by the desired parameters we want to explore further, group the data by paramter and watershed summarizing for the avg concentrations of each, pivoting wider so tha each parameter becomes a column
+result_filtered_data_water <- filtered_data_water_no_outliers %>%
+  filter(PARAMETER %in% c("E COLI BACTERIA", "PH")) %>%
+  group_by(PARAMETER, WATERSHED) %>%
+  summarise(AvgConcentration = mean(RESULT, na.rm = TRUE)) %>%
+  pivot_wider(names_from = PARAMETER, values_from = AvgConcentration)
+
+# Filter out non-finite values
+result_filtered_data_water <- result_filtered_data_water[is.finite(result_filtered_data_water$`PH`) & is.finite(result_filtered_data_water$`E COLI BACTERIA`), ]
+
+# Print the result
+print(result_filtered_data_water)
 ```
 
+#### PH analysis
 ```{r}
-library(ggplot2)
-# Mutate a new variable 'ecoli' through a binary system for when the parameter is 'e coli bacteria'  
-flow <- Flow_Quality %>% mutate(ecoli = case_when(PARAMETER == "E COLI BACTERIA" ~ 1,
-                                 TRUE ~ 0
-                                 ))
-# Make a new vector where we group by the flow of the body of water and summarize the average amount of e. coli presence 
-flow <- flow %>% group_by(flowing) %>% summarise(freq = mean(ecoli))
-# print 'flow'
-print(flow)
-# Visualize the frequency of e. coli with the type of flow for the body of water
-flow %>% ggplot() + geom_bar(aes(x=flowing,y=freq),stat="identity") + labs(x = 'Medium Type', y = 'E. Coli Frequency')
+# Create a visualization for the concentrations of E. Coli to the concentrations of 'pH'
 
+plot(result_filtered_data_water$`PH`, result_filtered_data_water$`E COLI BACTERIA`,main='E. Coli Concentration vs. pH',xlab='pH', ylab = 'E. Coli Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+
+regression_model_pH <- lm(`E COLI BACTERIA` ~ `PH`, data = result_filtered_data_water)
+
+# Add the regression line to the plot using abline()
+abline(regression_model_pH, col = "red")
+
+
+# Add the regression line to the plot using abline()
+
+# Print the plot and regression 
+print(plot)
+print (regression_model_pH)
+
+# Print the regression summary 
+summary(regression_model_pH)
+
+# Assess R-squared (coefficient of determination)
+cat("R-squared:", summary(regression_model_pH)$r.squared)
 ```
 
 ### Hypothesis Two - The relationship between locations of Nutrients and E. Coli 
@@ -585,14 +616,96 @@ summary(regression_model_NitrateNitrile)
 cat("R-squared:", summary(regression_model_NitrateNitrile)$r.squared)
 ```
 
-### Hypothesis Three - The relationship between characteristics of water and E. Coli 
+### Hypothesis Three - Presence of flowing water and the frequency of E. Coli in a given body of water
+
+```{r}
+# Assign a new variable called flowing where we classify the site type as either flowing or still water
+Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
+                                 SITE_TYPE == "Spring" ~ "Flowing",
+                                 SITE_TYPE == "Urban runoff" ~ "Flowing",
+                                 SITE_TYPE == "Rural runoff" ~ "Flowing",
+                                 SITE_TYPE == "Cave Stream" ~ "Flowing",
+                                 SITE_TYPE == "Storm Drain" ~ "Flowing",
+                                 TRUE ~ "Still"
+                                 ))
+
+```
+
+```{r}
+library(ggplot2)
+# Mutate a new variable 'ecoli' through a binary system for when the parameter is 'e coli bacteria'  
+flow <- Flow_Quality %>% mutate(ecoli = case_when(PARAMETER == "E COLI BACTERIA" ~ 1,
+                                 TRUE ~ 0
+                                 ))
+# Make a new vector where we group by the flow of the body of water and summarize the average amount of e. coli presence 
+flow <- flow %>% group_by(flowing) %>% summarise(freq = mean(ecoli))
+# print 'flow'
+print(flow)
+# Visualize the frequency of e. coli with the type of flow for the body of water
+flow %>% ggplot() + geom_bar(aes(x=flowing,y=freq),stat="identity") + labs(x = 'Medium Type', y = 'E. Coli Frequency')
+
+```
+
+### Hypothesis Four - The relationship between locations of temperature and E. coli
 
 #### Filter and adjust data
+```{r}
+# Filter the data to only contain the parameters that are temperature or E. Coli
+filtered_data_temp <- Water_Quality_new %>% filter(PARAMETER == "E COLI BACTERIA" | PARAMETER == "WATER TEMPERATURE")
+
+# Remove missingness from RESULTS column
+filtered_data_temp_no_na <- subset(filtered_data_temp, !is.na(RESULT))
+
+# Set the quartiles of the data 
+Q1 <- quantile(filtered_data_temp_no_na$RESULT, 0.25)
+Q3 <- quantile(filtered_data_temp_no_na$RESULT, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+# Remove outliers using the IQR method
+filtered_data_temp_no_outliers <- filtered_data_temp_no_na[filtered_data_temp_no_na$RESULT >= lower_bound & filtered_data_temp_no_na$RESULT <= upper_bound, ]
+
+# Create a vector where the no outlier data is filtered by the desired parameters we want to explore further, group the data by paramter and watershed summarizing for the avg concentrations of each, pivoting wider so tha each parameter becomes a column
+result_filtered_data_temp <- filtered_data_temp_no_outliers %>%
+  filter(PARAMETER %in% c("E COLI BACTERIA", "WATER TEMPERATURE")) %>%
+  group_by(PARAMETER, WATERSHED) %>%
+  summarise(AvgConcentration = mean(RESULT, na.rm = TRUE)) %>%
+  pivot_wider(names_from = PARAMETER, values_from = AvgConcentration)
+
+# Filter out non-finite values
+result_filtered_data_temp <- result_filtered_data_temp[is.finite(result_filtered_data_temp$`WATER TEMPERATURE`) & is.finite(result_filtered_data_temp$`E COLI BACTERIA`), ]
+
+# Print the result
+print(result_filtered_data_temp)
+```
+
+#### Temperature analysis
+```{r}
+# Create a visualization for the concentrations of E. Coli to the concentrations of 'Temperature'
+
+plot(result_filtered_data_temp$`WATER TEMPERATURE`, result_filtered_data_temp$`E COLI BACTERIA`,main='E. Coli Concentration vs. pH',xlab='Temperature (Celsius)', ylab = 'E. Coli Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+
+regression_model_temp <- lm(`E COLI BACTERIA` ~ `WATER TEMPERATURE`, data = result_filtered_data_temp)
+
+# Add the regression line to the plot using abline()
+abline(regression_model_temp, col = "red")
 
 
+# Add the regression line to the plot using abline()
 
-### Hypothesis Four
+# Print the plot and regression 
+print(plot)
+print (regression_model_temp)
 
+# Print the regression summary 
+summary(regression_model_temp)
+
+# Assess R-squared (coefficient of determination)
+cat("R-squared:", summary(regression_model_temp)$r.squared)
+```
 
 **1: Increasing human presence in public bodies of water will increase E. coli presence in popular attraction sites.  **
   
