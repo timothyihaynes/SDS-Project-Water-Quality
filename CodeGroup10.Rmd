@@ -352,7 +352,35 @@ ggmap(map) +
 
 
 ## Exploratory Analysis 
-### Hypothesis  One
+### Hypothesis  One - Presence of flowing water and the frequency of E. Coli in a given body of water
+
+```{r}
+# Assign a new variable called flowing where we classify the site type as either flowing or still water
+Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
+                                 SITE_TYPE == "Spring" ~ "Flowing",
+                                 SITE_TYPE == "Urban runoff" ~ "Flowing",
+                                 SITE_TYPE == "Rural runoff" ~ "Flowing",
+                                 SITE_TYPE == "Cave Stream" ~ "Flowing",
+                                 SITE_TYPE == "Storm Drain" ~ "Flowing",
+                                 TRUE ~ "Still"
+                                 ))
+
+```
+
+```{r}
+library(ggplot2)
+# Mutate a new variable 'ecoli' through a binary system for when the parameter is 'e coli bacteria'  
+flow <- Flow_Quality %>% mutate(ecoli = case_when(PARAMETER == "E COLI BACTERIA" ~ 1,
+                                 TRUE ~ 0
+                                 ))
+# Make a new vector where we group by the flow of the body of water and summarize the average amount of e. coli presence 
+flow <- flow %>% group_by(flowing) %>% summarise(freq = mean(ecoli))
+# print 'flow'
+print(flow)
+# Visualize the frequency of e. coli with the type of flow for the body of water
+flow %>% ggplot() + geom_bar(aes(x=flowing,y=freq),stat="identity") + labs(x = 'Medium Type', y = 'E. Coli Frequency')
+
+```
 
 ### Hypothesis Two - The relationship between locations of Nutrients and E. Coli 
 
@@ -557,36 +585,12 @@ summary(regression_model_NitrateNitrile)
 cat("R-squared:", summary(regression_model_NitrateNitrile)$r.squared)
 ```
 
-### Hypothesis Three - Presence of flowing water and the frequency of E. Coli in a given body of water
+### Hypothesis Three - The relationship between characteristics of water and E. Coli 
 
-```{r}
-# Assign a new variable called flowing where we classify the site type as either flowing or still water
-Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
-                                 SITE_TYPE == "Spring" ~ "Flowing",
-                                 SITE_TYPE == "Urban runoff" ~ "Flowing",
-                                 SITE_TYPE == "Rural runoff" ~ "Flowing",
-                                 SITE_TYPE == "Cave Stream" ~ "Flowing",
-                                 SITE_TYPE == "Storm Drain" ~ "Flowing",
-                                 TRUE ~ "Still"
-                                 ))
-
-```
+#### Filter and adjust data
 
 
-```{r}
-library(ggplot2)
-# Mutate a new variable 'ecoli' through a binary system for when the parameter is 'e coli bacteria'  
-flow <- Flow_Quality %>% mutate(ecoli = case_when(PARAMETER == "E COLI BACTERIA" ~ 1,
-                                 TRUE ~ 0
-                                 ))
-# Make a new vector where we group by the flow of the body of water and summarize the average amount of e. coli presence 
-flow <- flow %>% group_by(flowing) %>% summarise(freq = mean(ecoli))
-# print 'flow'
-print(flow)
-# Visualize the frequency of e. coli with the type of flow for the body of water
-flow %>% ggplot() + geom_bar(aes(x=flowing,y=freq),stat="identity") + labs(x = 'Medium Type', y = 'E. Coli Frequency')
 
-```
 ### Hypothesis Four
 
 
