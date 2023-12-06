@@ -1,4 +1,4 @@
-# SDS-Project-Water-Quality
+# SDS Project - WaterQuality
 Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria
   Valle, Katie Yang
 
