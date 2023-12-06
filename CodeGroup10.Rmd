@@ -536,7 +536,7 @@ summary(regression_model_ammonia)
 cat("R-squared:", summary(regression_model_ammonia)$r.squared)
 ```
 
-####Nitrate/Nitrite
+#### Nitrate/Nitrite
 ```{r}
 
  # Create a visualization for the concentrations of E. Coli to the concentrations of 'NITRATE/NITRITE AS N'
