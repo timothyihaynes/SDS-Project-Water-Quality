@@ -1,0 +1,31 @@
+---
+title: "WaterQuality"
+author: "Tim Haynes"
+date: "2023-11-26"
+output: html_document
+---
+
+```{r}
+Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
+                                 SITE_TYPE == "Spring" ~ "Flowing",
+                                 SITE_TYPE == "Urban runoff" ~ "Flowing",
+                                 SITE_TYPE == "Rural runoff" ~ "Flowing",
+                                 SITE_TYPE == "Cave Stream" ~ "Flowing",
+                                 SITE_TYPE == "Storm Drain" ~ "Flowing",
+                                 TRUE ~ "Still"
+                                 ))
+
+```
+
+
+```{r}
+library(ggplot2)
+flow <- Flow_Quality %>% mutate(ecoli = case_when(PARAMETER == "E COLI BACTERIA" ~ 1,
+                                 TRUE ~ 0
+                                 ))
+flow <- flow %>% group_by(flowing) %>% summarise(freq = mean(ecoli))
+print(flow)
+flow %>% ggplot() + geom_bar(aes(x=flowing,y=freq),stat="identity") + labs(x = 'Medium Type', y = 'E. Coli Frequency')
+
+```
+
