@@ -4,19 +4,19 @@ Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria
 
 ## Project - E. Coli Presence in Austin bodies of water
 
-## Project Description
+### Project Description
 Our project goals are to analyze the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin.
 
-## Link to Dataset
+### Link to Dataset
 
 
-## Dataset Description
+### Dataset Description
 
 
 
 
-# Additional Info
+### Additional Info
 
 
-# Github Repository
+### Github Repository
 
