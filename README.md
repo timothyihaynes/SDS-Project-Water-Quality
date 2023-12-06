@@ -1,4 +1,26 @@
 # SDS-Project-Water-Quality
-Analyzing the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin.
+Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria
+  Valle, Katie Yang
 
-# Detailed Readme with all relevant information is located in the Rmd file!
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project - E. Coli Presence in Austin bodies of water
+
+## Project Description
+Our project goals are to analyze the relationship between pathogenic bacteria and organic nutrients present in freshwater samples taken in Austin.
+
+## Link to Dataset
+
+
+## Dataset Description
+
+
+
+
+# Additional Info
+
+
+# Github Repository
+
