@@ -385,8 +385,8 @@ result_filtered_data <- filtered_data_no_outliers %>%
 print(result_filtered_data)
 ```
 
-#### Regression Analysis 
-####Orthophosphorus 
+### Regression Analysis 
+#### Orthophosphorus 
 ```{r}
 # Create a visualization for the concentrations of E. Coli to the concentrations of 'Orthophosphorus as P'
 plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`ORTHOPHOSPHORUS AS P`,main='E. Coli Concentration vs. Orthophosphorus Concentration',xlab='E. Coli Concentration', ylab = 'Orthophosphorus Concentration',pch=20)
@@ -407,7 +407,7 @@ cat("R-squared:", summary(regression_model_orthophosphorus)$r.squared)
 
 ```
 
-####Phosphorous
+#### Phosphorous
 ```{r}
 
  # Create a visualization for the concentrations of E. Coli to the concentrations of 'Phosphorus as P'
@@ -429,7 +429,7 @@ cat("R-squared:", summary(regression_model_phosphorus)$r.squared)
 ```
 
 
-####Ammonia
+#### Ammonia
 ```{r}
 
  # Create a visualization for the concentrations of E. Coli to the concentrations of 'Ammonia as N'
@@ -450,7 +450,7 @@ summary(regression_model_ammonia)
 cat("R-squared:", summary(regression_model_ammonia)$r.squared)
 ```
 
-####Nitrate/Nitrite
+#### Nitrate/Nitrite
 ```{r}
 
  # Create a visualization for the concentrations of E. Coli to the concentrations of 'NITRATE/NITRITE AS N'
