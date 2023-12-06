@@ -385,7 +385,7 @@ result_filtered_data <- filtered_data_no_outliers %>%
 print(result_filtered_data)
 ```
 
-### Regression Analysis 
+### Regression Analysis using Watershed
 #### Orthophosphorus 
 ```{r}
 # Create a visualization for the concentrations of E. Coli to the concentrations of 'Orthophosphorus as P'
@@ -469,9 +469,96 @@ summary(regression_model_NitrateNitrile)
 
 # Assess R-squared 
 cat("R-squared:", summary(regression_model_NitrateNitrile)$r.squared)
+```
 
+#### Regression Analysis using Years
+#### Orthophosphorus 
+```{r}
+# Create a visualization for the concentrations of E. Coli to the concentrations of 'Orthophosphorus as P'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`ORTHOPHOSPHORUS AS P`,main='E. Coli Concentration vs. Orthophosphorus Concentration',xlab='E. Coli Concentration', ylab = 'Orthophosphorus Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model_orthophosphorus <- lm(`ORTHOPHOSPHORUS AS P` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model_orthophosphorus, col = "red")
+
+# Print the plot and regression 
+print(plot)
+print (regression_model_orthophosphorus)
+
+# Print the regression summary 
+summary(regression_model_orthophosphorus)
+
+# Assess R-squared (coefficient of determination)
+cat("R-squared:", summary(regression_model_orthophosphorus)$r.squared)
+
+```
+
+#### Phosphorous
+```{r}
+
+ # Create a visualization for the concentrations of E. Coli to the concentrations of 'Phosphorus as P'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`PHOSPHORUS AS P`,main='E. Coli Concentration vs. Phosphorus Concentration',xlab='E. Coli Concentration', ylab = 'Phosphorus Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model_phosphorus <- lm(`PHOSPHORUS AS P` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model_phosphorus, col = "red")
+
+# Print the plot and regression 
+print(plot)
+print (regression_model_phosphorus)
+
+# Print the regression summary 
+summary(regression_model_phosphorus)
+
+# Assess R-squared (coefficient of determination)
+cat("R-squared:", summary(regression_model_phosphorus)$r.squared)
+```
+
+
+#### Ammonia
+```{r}
+
+ # Create a visualization for the concentrations of E. Coli to the concentrations of 'Ammonia as N'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`AMMONIA AS N`,main='E. Coli Concentration vs. Ammonia Concentration',xlab='E. Coli Concentration', ylab = 'Ammonia Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model_ammonia <- lm(`AMMONIA AS N` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model_ammonia, col = "red")
+
+# Print the plot and regression 
+print(plot)
+print (regression_model_ammonia)
+
+# Print the regression summary 
+summary(regression_model_ammonia)
+
+# Assess R-squared (coefficient of determination)
+cat("R-squared:", summary(regression_model_ammonia)$r.squared)
+```
+
+####Nitrate/Nitrite
+```{r}
+
+ # Create a visualization for the concentrations of E. Coli to the concentrations of 'NITRATE/NITRITE AS N'
+plot(result_filtered_data$`E COLI BACTERIA`, result_filtered_data$`NITRATE/NITRITE AS N`,main='E. Coli Concentration vs. Nitrate/Nitrile Concentration',xlab='E. Coli Concentration', ylab = 'Nitrate/Nitrile Concentration',pch=20)
+
+# Add a regression line to display if there's a statistical relationship 
+regression_model_NitrateNitrile <- lm(`NITRATE/NITRITE AS N` ~ `E COLI BACTERIA`, data = result_filtered_data)
+abline(regression_model_NitrateNitrile, col = "red")
+
+# Print the plot and regression 
+print(plot)
+print (regression_model_NitrateNitrile)
+
+# Print the regression summary 
+summary(regression_model_NitrateNitrile)
+
+# Assess R-squared 
+cat("R-squared:", summary(regression_model_NitrateNitrile)$r.squared)
+```
 
 ### Hypothesis Three - Presence of flowing water and the frequency of E. Coli in a given body of water
+
 ```{r}
 # Assign a new variable called flowing where we classify the site type as either flowing or still water
 Flow_Quality <- Water_Quality %>% mutate(flowing =case_when(SITE_TYPE == "Stream" ~ "Flowing",
