@@ -2,10 +2,6 @@
 Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria
   Valle, Katie Yang
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Project - E. Coli Presence in Austin bodies of water
 
 ## Project Description
