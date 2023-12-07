@@ -6,6 +6,7 @@ Anthony Desdha, Santiago Fonnegra, Tim Haynes, Hayden Post, Vyvy Tran, Valeria
 
 ### Project Description
 Our project goals are to analyze the relationship between pathogenic bacteria, organic nutrients present in freshwater samples, and other environmental factors in Austin's bodies of water.
+Final paper is under Combating Waterborne Diseases: The Intersection of Public Health, Environmental Sustainability, and Economic Implications
 
 ### Link to Dataset
 https://data.austintexas.gov/Environment/Water-Quality-Sampling-Data/5tye-7ray/about_data
