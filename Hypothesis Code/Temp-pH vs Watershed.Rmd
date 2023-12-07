@@ -1,0 +1,27 @@
+---
+title: "Temperature/pH vs Watershed"
+author: "Katie Yang"
+date: "2023-12-07"
+output: html_document
+---
+
+```{r}
+# Filter out anything that is not pH
+WQ_pH <- Water_Quality_new %>% group_by(PARAMETER) %>% filter(PARAMETER == "PH")
+
+# Group each pH data point by watershed and find the mean of each location
+WQ_pH <- WQ_pH %>% group_by(WATERSHED) %>% summarise(mean_pH = mean(RESULT, na.rm = TRUE))
+
+# Create a graph that shows the mean pH at each watershed
+ggplot(WQ_pH, aes(x = WATERSHED, y = mean_pH)) + geom_bar(stat = "identity", fill = "skyblue", alpha = 0.7) + theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Watershed', y = 'Mean pH')
+
+# Filter out anything that is not water temperature
+WQ_temp <- Water_Quality_new %>% group_by(PARAMETER) %>% filter(PARAMETER == "WATER TEMPERATURE")
+
+# Group each temperature data point by watershed and find the mean of each location
+WQ_temp <- WQ_temp %>% group_by(WATERSHED) %>% summarise(mean_temp = mean(RESULT, na.rm = TRUE))
+
+# Create a graph that shows the mean temperapture at each watershed
+ggplot(WQ_temp, aes(x = WATERSHED, y = mean_temp)) + geom_bar(stat = "identity", fill = "red", alpha = 0.7) + theme(axis.text.x = element_text(angle = 45, vjust = 0.7)) + labs(x = 'Watershed', y = 'Mean Temperature (C)')
+
+```
